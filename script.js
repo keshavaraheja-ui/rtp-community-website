@@ -87,25 +87,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Add hover effect with animation
+        // Store base transform for each page based on its position class
+        const classes = page.className;
+        let baseTransform = '';
+        
+        // Determine base transform based on class - match CSS exactly
+        if (classes.includes('top')) {
+            baseTransform = 'translateX(-50%)';
+        } else if (classes.includes('top-left') || classes.includes('bottom-left')) {
+            baseTransform = 'translateX(-50%)';
+        } else if (classes.includes('top-right') || classes.includes('bottom-right')) {
+            baseTransform = 'translateX(50%)';
+        } else if (classes.includes('bottom')) {
+            baseTransform = 'translateX(-50%)';
+        }
+        
+        // Don't set initial transform - CSS handles positioning with !important
+        // Only add transform on hover
+        
+        // Add hover effect with animation - preserve base transform
         page.addEventListener('mouseenter', function() {
-            this.style.transform = this.style.transform.includes('translate') 
-                ? this.style.transform + ' scale(1.15)' 
-                : 'scale(1.15)';
+            // Combine base transform with scale
+            this.style.transform = baseTransform + ' scale(1.15)';
         });
         
         page.addEventListener('mouseleave', function() {
-            // Reset to original transform
-            const classes = this.className;
-            if (classes.includes('top')) {
-                this.style.transform = 'translateX(-50%)';
-            } else if (classes.includes('top-left') || classes.includes('bottom-left')) {
-                this.style.transform = 'translateX(-50%)';
-            } else if (classes.includes('top-right') || classes.includes('bottom-right')) {
-                this.style.transform = 'translateX(50%)';
-            } else if (classes.includes('bottom')) {
-                this.style.transform = 'translateX(-50%)';
-            }
+            // Remove inline style to let CSS !important take over
+            this.style.transform = '';
         });
     });
     
@@ -159,6 +167,59 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Add CSS animation for pulse
+// Function to highlight event on map
+function highlightEventOnMap(eventType) {
+    const mapIframe = document.getElementById('rtp-map-iframe');
+    if (!mapIframe) return;
+    
+    // Event locations with coordinates (all within RTP area)
+    const eventLocations = {
+        'festival': {
+            lat: 35.8992,
+            lng: -78.8636,
+            zoom: 14,
+            name: 'RTP Community Festival'
+        },
+        'summit': {
+            lat: 35.9050,
+            lng: -78.8700,
+            zoom: 14,
+            name: 'Tech Innovation Summit'
+        },
+        'networking': {
+            lat: 35.8930,
+            lng: -78.8570,
+            zoom: 14,
+            name: 'Networking Events'
+        }
+    };
+    
+    const location = eventLocations[eventType];
+    if (location) {
+        // Update map to show the event location with proper embed URL
+        // Using a centered view on the event location
+        const newMapUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3238.5!2d${location.lng}!3d${location.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f${location.zoom}!3m3!1m2!1s0x89ace472d0e3b5b5%3A0x1e3b8c8c8c8c8c8c!2sResearch%20Triangle%20Park%2C%20NC!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus`;
+        mapIframe.src = newMapUrl;
+        
+        // Highlight the event card with visual feedback
+        const eventCards = document.querySelectorAll('.event-item, .event-location-card');
+        eventCards.forEach(card => {
+            if (card.dataset.event === eventType) {
+                // Highlight the clicked event
+                card.style.borderLeft = '6px solid #0066cc';
+                card.style.boxShadow = '0 4px 10px rgba(0,102,204,0.3)';
+                card.style.backgroundColor = '#e6f3ff';
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    card.style.borderLeft = '4px solid #00aa55';
+                    card.style.boxShadow = 'none';
+                    card.style.backgroundColor = 'white';
+                }, 3000);
+            }
+        });
+    }
+}
+
 const style = document.createElement('style');
 style.textContent = `
     @keyframes pulse {
